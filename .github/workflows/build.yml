@@ -1,4 +1,4 @@
-name: Run tests on Alibaba FastJson
+name: Build
 
 on:
   push:
