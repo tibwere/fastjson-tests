@@ -1,4 +1,4 @@
-package it.uniroma2.dicii.isw2;
+package it.uniroma2.dicii.isw2.fastjson;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.JSONSerializer;
@@ -13,6 +13,7 @@ import java.util.Collection;
 
 import static org.junit.Assert.assertEquals;
 
+/* Original class: https://github.com/alibaba/fastjson/tree/1.2.79/src/test/java/com/alibaba/json/bvt/serializer/ObjectArraySerializerTest.java */
 @RunWith(value = Parameterized.class)
 public class ObjectArraySerializerTest {
 
