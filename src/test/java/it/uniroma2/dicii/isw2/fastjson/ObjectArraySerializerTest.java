@@ -3,8 +3,8 @@ package it.uniroma2.dicii.isw2.fastjson;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.JSONSerializer;
 import com.alibaba.fastjson.serializer.SerializeWriter;
-import org.junit.Assume;
 import org.junit.Test;
+import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -14,51 +14,71 @@ import java.util.Collection;
 import static org.junit.Assert.assertEquals;
 
 /* Original class: https://github.com/alibaba/fastjson/tree/1.2.79/src/test/java/com/alibaba/json/bvt/serializer/ObjectArraySerializerTest.java */
-@RunWith(value = Parameterized.class)
+@RunWith(value = Enclosed.class)
 public class ObjectArraySerializerTest {
 
-    enum Type {WRITE, TO_JSON_STRING};
+    @RunWith(value = Parameterized.class)
+    public static class Type012ObjectArraySerializerTest {
 
-    private Type type;
-    private int initialSize;
-    private Object [] objects;
-    private String expected;
-    private boolean isPrettyFormat;
+        private int initialSize;
+        private Object [] objects;
+        private String expected;
 
-    public ObjectArraySerializerTest(Type type, int initialSize, Object [] objects, boolean isPrettyFormat, String expected) {
-        this.type = type;
-        this.initialSize = initialSize;
-        this.objects = objects;
-        this.isPrettyFormat = isPrettyFormat;
-        this.expected = expected;
+        public Type012ObjectArraySerializerTest(int initialSize, Object[] objects, String expected) {
+            configure(initialSize, objects, expected);
+        }
+
+        private void configure(int initialSize, Object[] objects, String expected) {
+            this.initialSize = initialSize;
+            this.objects = objects;
+            this.expected = expected;
+        }
+
+        @Parameterized.Parameters
+        public static Collection<Object[]> testCasesTuples() {
+            return Arrays.asList(new Object[][] {
+                    {1, new Object[] {"a12", "b34"}, "[\"a12\",\"b34\"]"},
+                    {1, new Object[] {}, "[]"},
+                    {1,new Object[] { null, null }, "[null,null]"},
+            });
+        }
+
+        @Test
+        public void test012() {
+            SerializeWriter out = new SerializeWriter(this.initialSize);
+            JSONSerializer.write(out, this.objects);
+            assertEquals(this.expected, out.toString());
+        }
     }
 
-    @Parameterized.Parameters
-    public static Collection<Object[]> configure() {
-        /* Tests 0, 1 and 2 do not use the 'isPrettyFormat' parameter */
-        final boolean dontCareBoolean = false;
-        /* Test 3 does not use the 'initialSize' parameter */
-        final int dontCareInteger = 1;
+    @RunWith(value = Parameterized.class)
+    public static class Type3ObjectArraySerializerTest {
 
-        return Arrays.asList(new Object[][] {
-                {Type.WRITE, 1, new Object[] {"a12", "b34"}, dontCareBoolean, "[\"a12\",\"b34\"]"},
-                {Type.WRITE, 1, new Object[] {}, dontCareBoolean, "[]"},
-                {Type.WRITE, 1,new Object[] { null, null }, dontCareBoolean, "[null,null]"},
-                {Type.TO_JSON_STRING, dontCareInteger, new Object[] { null, null }, false, "[null,null]"}
-        });
+        private Object [] objects;
+        private boolean isPrettyFormat;
+        private String expected;
+
+        public Type3ObjectArraySerializerTest(Object[] objects, boolean isPrettyFormat, String expected) {
+            configure(objects, isPrettyFormat, expected);
+        }
+
+        private void configure(Object []objects, boolean isPrettyFormat, String expected) {
+            this.objects = objects;
+            this.isPrettyFormat = isPrettyFormat;
+            this.expected = expected;
+        }
+
+        @Parameterized.Parameters
+        public static Collection<Object[]> testCasesTuples() {
+            return Arrays.asList(new Object[][] {
+                    {new Object[] { null, null }, false, "[null,null]"}
+            });
+        }
+
+        @Test
+        public void test3() {
+            assertEquals(this.expected, JSON.toJSONString(this.objects, this.isPrettyFormat));
+        }
     }
 
-    @Test
-    public void test012() {
-        Assume.assumeTrue(this.type == Type.WRITE);
-        SerializeWriter out = new SerializeWriter(this.initialSize);
-        JSONSerializer.write(out, this.objects);
-        assertEquals(this.expected, out.toString());
-    }
-
-    @Test
-    public void test3() {
-        Assume.assumeTrue(this.type == Type.TO_JSON_STRING);
-        assertEquals(this.expected, JSON.toJSONString(this.objects, this.isPrettyFormat));
-    }
 }

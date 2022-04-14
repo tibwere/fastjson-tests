@@ -7,9 +7,9 @@ import com.alibaba.fastjson.annotation.JSONField;
 import com.alibaba.fastjson.serializer.JSONSerializer;
 import com.alibaba.fastjson.serializer.SerializeWriter;
 import com.alibaba.fastjson.serializer.SerializerFeature;
-import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -20,101 +20,151 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
-/* Original class: https://github.com/alibaba/fastjson/tree/1.2.79/src/test/java/com/alibaba/json/bvt/serializer/MapTest.java */
-@RunWith(value = Parameterized.class)
+/* Original class: https://github.com/alibaba/fastjson/blob/1.2.79/src/test/java/com/alibaba/json/bvt/serializer/MapTest.java */
+@RunWith(value = Enclosed.class)
 public class MapTest {
 
-    enum Type {TEST_NO_SORT, TEST_NULL, TEST_JSON_FIELD};
+    @RunWith(value = Parameterized.class)
+    public static class TypeNoSortMapTest {
 
-    private static Map<SerializerFeature, Boolean> configs;
-    private static String exceptionMsg;
+        private static Map<SerializerFeature, Boolean> features;
+        private static String exceptionMsg;
 
-    private Type type;
-    private boolean ordered;
-    private Map<String, Object> elements;
-    private String expected;
-    private SerializerFeature [] features;
+        private boolean ordered;
+        private Map<String, Object> objects;
+        private String expected;
 
-    public MapTest(Type type, boolean ordered, Map<String, Object> elements, SerializerFeature [] features, String expected) {
-        this.type = type;
-        this.ordered = ordered;
-        this.elements = elements;
-        this.features = features;
-        this.expected = expected;
-    }
+        public TypeNoSortMapTest(boolean ordered, Map<String, Object> objects, String expected) {
+            configure(ordered, objects, expected);
+        }
 
-    @BeforeClass
-    public static void setupEnvironment() {
-        configs = new HashMap<>();
-        configs.put(SerializerFeature.SortField, false);
-        configs.put(SerializerFeature.UseSingleQuotes, true);
-        exceptionMsg = "maybe circular references";
-    }
+        private void configure(boolean ordered, Map<String, Object> objects, String expected) {
+            this.ordered = ordered;
+            this.objects = objects;
+            this.expected = expected;
+        }
 
-    @Parameterized.Parameters
-    public static Collection<Object[]> configure() {
-        Map<String, Object> noSortMap = new HashMap<>();
-        noSortMap.put("name", "jobs");
-        noSortMap.put("id", 33);
+        @BeforeClass
+        public static void setupEnvironment() {
+            features = new HashMap<>();
+            features.put(SerializerFeature.SortField, false);
+            features.put(SerializerFeature.UseSingleQuotes, true);
+            exceptionMsg = "maybe circular references";
+        }
 
-        Map<String, Object> nullMap = new HashMap<>();
-        nullMap.put("name", null);
+        @Parameterized.Parameters
+        public static Collection<Object[]> testCasesTuples() {
+            Map<String, Object> objs = new HashMap<>();
+            objs.put("name", "jobs");
+            objs.put("id", 33);
 
-        Map<String, Object> jsonFieldMap = new HashMap<>();
-        jsonFieldMap.put("Ariston", null);
+            return Arrays.asList(new Object[][] {
+                    {true, objs, "{'name':'jobs','id':33}"}
+            });
+        }
 
-        return Arrays.asList(new Object[][] {
-                {Type.TEST_NO_SORT, true, noSortMap, null, "{'name':'jobs','id':33}"},
-                {Type.TEST_NULL, true, nullMap, new SerializerFeature[] {SerializerFeature.WriteMapNullValue}, "{\"name\":null}"},
-                {Type.TEST_JSON_FIELD, true, jsonFieldMap, null, "{\"map\":{\"Ariston\":null}}"}
-        });
-    }
+        @Test
+        public void testNoSort(){
+            JSONObject obj = new JSONObject(this.ordered);
+            obj.putAll(this.objects);
+            String text = toJSONString(obj);
+            assertEquals(this.expected, text);
+        }
 
-    @Test
-    public void testNoSort() {
-        Assume.assumeTrue(this.type == Type.TEST_NO_SORT);
+        public static String toJSONString(Object object) {
+            SerializeWriter out = new SerializeWriter();
 
-        JSONObject obj = new JSONObject(this.ordered);
-        obj.putAll(this.elements);
-        assertEquals(this.expected, toJSONString(obj));
-    }
+            try {
+                JSONSerializer serializer = new JSONSerializer(out);
+                features.forEach(serializer::config);
+                serializer.write(object);
 
-    @Test
-    public void testNull() throws Exception {
-        Assume.assumeTrue(this.type == Type.TEST_NULL);
-
-        JSONObject obj = new JSONObject(this.ordered);
-        obj.putAll(this.elements);
-        String text = JSON.toJSONString(obj, this.features);
-        assertEquals(this.expected, text);
-    }
-
-    public static final String toJSONString(Object object) {
-        SerializeWriter out = new SerializeWriter();
-
-        try {
-            JSONSerializer serializer = new JSONSerializer(out);
-            configs.forEach(serializer::config);
-            serializer.write(object);
-            return out.toString();
-        } catch (StackOverflowError e) {
-            throw new JSONException(exceptionMsg, e);
-        } finally {
-            out.close();
+                return out.toString();
+            } catch (StackOverflowError e) {
+                throw new JSONException(exceptionMsg, e);
+            } finally {
+                out.close();
+            }
         }
     }
 
-    @Test
-    public void testOnJSONField() {
-        Assume.assumeTrue(this.type == Type.TEST_JSON_FIELD);
+    @RunWith(value = Parameterized.class)
+    public static class TypeNullMapTest {
 
-        MapNullValue mapNullValue = new MapNullValue();
-        mapNullValue.setMap(this.elements);
-        String json = JSON.toJSONString(mapNullValue);
-        assertEquals(this.expected, json);
+        private boolean ordered;
+        private Map<String, Object> objects;
+        private SerializerFeature[] features;
+        private String expected;
+
+        public TypeNullMapTest(boolean ordered, Map<String, Object> objects, SerializerFeature []features, String expected) {
+            configure(ordered, objects, features, expected);
+        }
+
+        private void configure(boolean ordered, Map<String, Object> objects, SerializerFeature []features, String expected) {
+            this.ordered = ordered;
+            this.objects = objects;
+            this.features = features;
+            this.expected = expected;
+        }
+
+        @Parameterized.Parameters
+        public static Collection<Object[]> testCasesTuples() {
+            Map<String, Object> objs = new HashMap<>();
+            objs.put("name", null);
+
+            SerializerFeature []features = new SerializerFeature[] {
+                    SerializerFeature.WriteMapNullValue
+            };
+
+            return Arrays.asList(new Object[][] {
+                    {true, objs, features, "{\"name\":null}"}
+            });
+        }
+
+        @Test
+        public void testNull() {
+            JSONObject obj = new JSONObject(this.ordered);
+            obj.putAll(this.objects);
+            String text = JSON.toJSONString(obj, this.features);
+            assertEquals(this.expected, text);
+        }
     }
 
-    class MapNullValue {
+    @RunWith(value = Parameterized.class)
+    public static class OnJSONFieldTypeMapTest {
+
+        private Map<String, Object> objects;
+        private String expected;
+
+        public OnJSONFieldTypeMapTest(Map<String, Object> objects, String expected) {
+            configure(objects, expected);
+        }
+
+        private void configure(Map<String, Object> objects, String expected) {
+            this.objects = objects;
+            this.expected = expected;
+        }
+
+        @Parameterized.Parameters
+        public static Collection<Object[]> testCasesTuples() {
+            Map<String, Object> objs = new HashMap<>();
+            objs.put("Ariston", null);
+
+            return Arrays.asList(new Object[][] {
+                    {objs, "{\"map\":{\"Ariston\":null}}"}
+            });
+        }
+
+        @Test
+        public void testOnJSONField() {
+            MapNullValue mapNullValue = new MapNullValue();
+            mapNullValue.setMap(this.objects);
+            String json = JSON.toJSONString(mapNullValue);
+            assertEquals(this.expected, json);
+        }
+    }
+
+    static class MapNullValue {
         @JSONField(serialzeFeatures = {SerializerFeature.WriteMapNullValue})
         private Map map;
 
@@ -126,5 +176,4 @@ public class MapTest {
             this.map = map;
         }
     }
-
 }
