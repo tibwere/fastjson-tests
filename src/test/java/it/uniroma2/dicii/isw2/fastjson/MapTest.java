@@ -25,31 +25,23 @@ import static org.junit.Assert.assertEquals;
 public class MapTest {
 
     @RunWith(value = Parameterized.class)
-    public static class TypeNoSortMapTest {
+    public static class MapTestNoSortTests {
 
+        private static SerializeWriter out;
+        private static String exceptionString;
         private static Map<SerializerFeature, Boolean> features;
-        private static String exceptionMsg;
 
-        private boolean ordered;
-        private Map<String, Object> objects;
+        private JSONObject obj;
         private String expected;
 
-        public TypeNoSortMapTest(boolean ordered, Map<String, Object> objects, String expected) {
+        public MapTestNoSortTests(boolean ordered, Map<String, Object> objects, String expected) {
             configure(ordered, objects, expected);
         }
 
-        private void configure(boolean ordered, Map<String, Object> objects, String expected) {
-            this.ordered = ordered;
-            this.objects = objects;
+        public void configure(boolean ordered, Map<String, Object> objects, String expected) {
+            this.obj = new JSONObject(ordered);
+            objects.forEach((k,v) -> obj.put(k,v));
             this.expected = expected;
-        }
-
-        @BeforeClass
-        public static void setupEnvironment() {
-            features = new HashMap<>();
-            features.put(SerializerFeature.SortField, false);
-            features.put(SerializerFeature.UseSingleQuotes, true);
-            exceptionMsg = "maybe circular references";
         }
 
         @Parameterized.Parameters
@@ -63,17 +55,17 @@ public class MapTest {
             });
         }
 
-        @Test
-        public void testNoSort(){
-            JSONObject obj = new JSONObject(this.ordered);
-            obj.putAll(this.objects);
-            String text = toJSONString(obj);
-            assertEquals(this.expected, text);
+        @BeforeClass
+        public static void setupEnvironment() {
+            out = new SerializeWriter();
+            exceptionString = "maybe circular references";
+
+            features = new HashMap<>();
+            features.put(SerializerFeature.SortField, false);
+            features.put(SerializerFeature.UseSingleQuotes, true);
         }
 
         public static String toJSONString(Object object) {
-            SerializeWriter out = new SerializeWriter();
-
             try {
                 JSONSerializer serializer = new JSONSerializer(out);
                 features.forEach(serializer::config);
@@ -81,29 +73,30 @@ public class MapTest {
 
                 return out.toString();
             } catch (StackOverflowError e) {
-                throw new JSONException(exceptionMsg, e);
+                throw new JSONException(exceptionString, e);
             } finally {
                 out.close();
             }
         }
+
+        @Test
+        public void testNSort() {
+            assertEquals(this.expected, toJSONString(this.obj));
+        }
     }
 
     @RunWith(value = Parameterized.class)
-    public static class TypeNullMapTest {
-
-        private boolean ordered;
-        private Map<String, Object> objects;
-        private SerializerFeature[] features;
+    public static class MapTestNullTests {
+        private JSONObject obj;
         private String expected;
 
-        public TypeNullMapTest(boolean ordered, Map<String, Object> objects, SerializerFeature []features, String expected) {
-            configure(ordered, objects, features, expected);
+        public MapTestNullTests(boolean ordered, Map<String, Object> objects, String expected) {
+            configure(ordered, objects, expected);
         }
 
-        private void configure(boolean ordered, Map<String, Object> objects, SerializerFeature []features, String expected) {
-            this.ordered = ordered;
-            this.objects = objects;
-            this.features = features;
+        public void configure(boolean ordered, Map<String, Object> objects, String expected) {
+            this.obj = new JSONObject(ordered);
+            objects.forEach((k,v) -> obj.put(k,v));
             this.expected = expected;
         }
 
@@ -112,36 +105,35 @@ public class MapTest {
             Map<String, Object> objs = new HashMap<>();
             objs.put("name", null);
 
-            SerializerFeature []features = new SerializerFeature[] {
-                    SerializerFeature.WriteMapNullValue
-            };
-
             return Arrays.asList(new Object[][] {
-                    {true, objs, features, "{\"name\":null}"}
+                    {true, objs, "{\"name\":null}"}
             });
         }
 
         @Test
         public void testNull() {
-            JSONObject obj = new JSONObject(this.ordered);
-            obj.putAll(this.objects);
-            String text = JSON.toJSONString(obj, this.features);
-            assertEquals(this.expected, text);
+            /*
+             * WriteMapNullValue is not a parameter of the test because the test itself
+             * requires to test null elements inside the JSONObject
+             */
+            String actual = JSON.toJSONString(this.obj, SerializerFeature.WriteMapNullValue);
+            assertEquals(this.expected, actual);
         }
     }
 
     @RunWith(value = Parameterized.class)
-    public static class OnJSONFieldTypeMapTest {
+    public static class MapTestOnJsonFieldTests {
 
-        private Map<String, Object> objects;
+        private MapNullValue map;
         private String expected;
 
-        public OnJSONFieldTypeMapTest(Map<String, Object> objects, String expected) {
+        public MapTestOnJsonFieldTests(Map<String, Object> objects, String expected) {
             configure(objects, expected);
         }
 
-        private void configure(Map<String, Object> objects, String expected) {
-            this.objects = objects;
+        public void configure(Map<String, Object> objects, String expected) {
+            this.map = new MapNullValue();
+            this.map.setMap(objects);
             this.expected = expected;
         }
 
@@ -157,22 +149,19 @@ public class MapTest {
 
         @Test
         public void testOnJSONField() {
-            MapNullValue mapNullValue = new MapNullValue();
-            mapNullValue.setMap(this.objects);
-            String json = JSON.toJSONString(mapNullValue);
-            assertEquals(this.expected, json);
+            assertEquals(this.expected, JSON.toJSONString(this.map));
         }
     }
 
     static class MapNullValue {
         @JSONField(serialzeFeatures = {SerializerFeature.WriteMapNullValue})
-        private Map map;
+        private Map<String, Object> map;
 
-        public Map getMap() {
+        public Map<String, Object> getMap() {
             return map;
         }
 
-        public void setMap( Map map ) {
+        public void setMap(Map<String, Object> map) {
             this.map = map;
         }
     }
