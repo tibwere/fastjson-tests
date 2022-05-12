@@ -2,7 +2,7 @@
 
 JACOCOCLI="./src/test/lib/jacococli.jar"
 FASTJSONJAR="./src/test/lib/fastjson-1.2.79.jar"
-FASTJSONSRC="./src/test/resources/original-src/main/java"
+FASTJSONSRC="./src/test/resources/fastjson-1.2.79/src"
 TARGETDIR="./target/site/jacoco"
 
 mkdir -p ${TARGETDIR}
