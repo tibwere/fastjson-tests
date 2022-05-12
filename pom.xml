@@ -20,6 +20,7 @@
     <sonar.organization>tibwere</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.sources>${project.basedir}/src/test/resources/fastjson-1.2.79/src</sonar.sources>
+    <sonar.java.binaries>${project.basedir}/src/test/lib/fastjson-1.2.79.jar</sonar.java.binaries>
   </properties>
 
   <developers>
