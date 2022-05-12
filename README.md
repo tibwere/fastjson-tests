@@ -4,9 +4,9 @@
 
 Porting of test cases to version 4 of JUnit for the Alibaba Fastjson
 
-## Try it yourself 😃
+## Try it yourself! 😃
 
-To test FastJSON v.1.2.79 and compute coverage using JaCoCO, run the following commands:
+To test FastJSON v.1.2.79 and compute coverage using JaCoCo, run the following commands:
 
   - Clone this repository
   ```
