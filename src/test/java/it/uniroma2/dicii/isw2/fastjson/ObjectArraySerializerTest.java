@@ -3,7 +3,6 @@ package it.uniroma2.dicii.isw2.fastjson;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.JSONSerializer;
 import com.alibaba.fastjson.serializer.SerializeWriter;
-import com.alibaba.fastjson.serializer.SerializerFeature;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
@@ -11,8 +10,6 @@ import org.junit.runners.Parameterized;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -41,7 +38,8 @@ public class ObjectArraySerializerTest {
             return Arrays.asList(new Object[][] {
                     {1, new Object[] { "a12", "b34" }, "[\"a12\",\"b34\"]"},
                     {1, new Object[] {}, "[]"},
-                    {1, new Object[] {null, null}, "[null,null]"}
+                    {1, new Object[] {null, null}, "[null,null]"},
+                    {1, null, "null"} // Added for improve coverage
             });
         }
 

@@ -143,7 +143,7 @@ public class MapTest {
             objs.put("Ariston", null);
 
             return Arrays.asList(new Object[][] {
-                    {objs, "{\"map\":{\"Ariston\":null}}"}
+                        {objs, "{\"map\":{\"Ariston\":null}}"}
             });
         }
 
